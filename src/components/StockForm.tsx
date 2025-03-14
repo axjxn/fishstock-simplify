@@ -1,17 +1,16 @@
 
 import { useState } from "react";
 import { fishTypes } from "@/data/mockData";
-import { calculateTotalCost, EntryTime, formatDate, generateBatchNumber } from "@/utils/stockUtils";
+import { calculateTotalCost, EntryTime, generateBatchNumber } from "@/utils/stockUtils";
 import { Search, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface StockFormProps {
   time: EntryTime;
   onAddStock?: (data: any) => void;
-  selectedDate?: Date;
 }
 
-const StockForm = ({ time, onAddStock, selectedDate }: StockFormProps) => {
+const StockForm = ({ time, onAddStock }: StockFormProps) => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
@@ -75,9 +74,9 @@ const StockForm = ({ time, onAddStock, selectedDate }: StockFormProps) => {
       return;
     }
     
-    // Get date - either selected date or today
-    const entryDate = selectedDate || new Date();
-    const formattedDate = formatDate(entryDate);
+    // Get today's date
+    const today = new Date();
+    const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
     
     // Create stock entry
     const newStock = {

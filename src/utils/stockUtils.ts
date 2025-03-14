@@ -10,7 +10,6 @@ export enum StockStatus {
 export enum EntryTime {
   MORNING = "Morning",
   NOON = "Noon",
-  EVENING = "Evening",
   NIGHT = "Night"
 }
 
