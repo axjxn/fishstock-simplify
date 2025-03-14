@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { stockMovementReports, stockPurchases } from "@/data/mockData";
@@ -238,7 +237,7 @@ const Reports = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip formatter={(value) => [`₹${(value * 1000).toLocaleString()}`, 'Cost']} />
+                      <Tooltip formatter={(value: number) => [`₹${(value * 1000).toLocaleString()}`, 'Cost']} />
                       <Line type="monotone" dataKey="cost" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
                     </LineChart>
                   </ResponsiveContainer>
