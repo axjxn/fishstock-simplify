@@ -72,9 +72,9 @@ const StockEntry = () => {
         className="space-y-6"
       >
         <TabsList className="grid grid-cols-3 w-full max-w-md">
-          <TabsTrigger value={EntryTime.MORNING} className="text-sm">Morning Entry (6 AM - 9 AM)</TabsTrigger>
-          <TabsTrigger value={EntryTime.NOON} className="text-sm">Noon Entry (12 PM)</TabsTrigger>
-          <TabsTrigger value={EntryTime.EVENING} className="text-sm">Evening Entry (4 PM - 6 PM)</TabsTrigger>
+          <TabsTrigger value={EntryTime.MORNING}>Morning Entry (6 AM - 9 AM)</TabsTrigger>
+          <TabsTrigger value={EntryTime.NOON}>Noon Entry (12 PM)</TabsTrigger>
+          <TabsTrigger value={EntryTime.EVENING}>Evening Entry (4 PM - 6 PM)</TabsTrigger>
         </TabsList>
         
         <TabsContent value={EntryTime.MORNING} className="space-y-6 animate-fade-in">
