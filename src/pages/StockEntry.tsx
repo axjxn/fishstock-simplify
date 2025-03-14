@@ -1,25 +1,30 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EntryTime } from "@/utils/stockUtils";
+import { EntryTime, formatDate } from "@/utils/stockUtils";
 import StockForm from "@/components/StockForm";
 import { stockPurchases } from "@/data/mockData";
 import { useState } from "react";
 import StockTable from "@/components/StockTable";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Calendar } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const StockEntry = () => {
   const [activeTab, setActiveTab] = useState<EntryTime>(EntryTime.MORNING);
   const [localStockPurchases, setLocalStockPurchases] = useState(stockPurchases);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   const handleAddStock = (newStock: any) => {
     setLocalStockPurchases([newStock, ...localStockPurchases]);
   };
   
-  // Filter stock entries for the current day and time
+  // Filter stock entries for the selected date and time
   const getCurrentTimeEntries = () => {
-    const today = new Date();
-    const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+    const formattedDate = formatDate(selectedDate);
     
     return localStockPurchases.filter(
       item => item.date === formattedDate && item.time === activeTab
@@ -30,10 +35,35 @@ const StockEntry = () => {
   
   return (
     <div className="page-container">
-      <h1 className="page-title">Stock Entry</h1>
-      <p className="text-muted-foreground mb-8">
-        Record new stock purchases for your inventory
-      </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <div>
+          <h1 className="page-title">Stock Entry</h1>
+          <p className="text-muted-foreground">
+            Record new stock purchases for your inventory
+          </p>
+        </div>
+        
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full sm:w-auto"
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              {format(selectedDate, "dd MMMM yyyy")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end">
+            <CalendarComponent
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
       
       <Tabs 
         defaultValue={EntryTime.MORNING} 
@@ -41,16 +71,17 @@ const StockEntry = () => {
         onValueChange={(value) => setActiveTab(value as EntryTime)}
         className="space-y-6"
       >
-        <TabsList className="grid grid-cols-2 w-full max-w-md">
+        <TabsList className="grid grid-cols-3 w-full max-w-md">
           <TabsTrigger value={EntryTime.MORNING} className="text-sm">Morning Entry (6 AM - 9 AM)</TabsTrigger>
           <TabsTrigger value={EntryTime.NOON} className="text-sm">Noon Entry (12 PM)</TabsTrigger>
+          <TabsTrigger value={EntryTime.EVENING} className="text-sm">Evening Entry (4 PM - 6 PM)</TabsTrigger>
         </TabsList>
         
         <TabsContent value={EntryTime.MORNING} className="space-y-6 animate-fade-in">
           <div className="grid md:grid-cols-2 gap-8">
             <div>
               <h2 className="text-xl font-semibold mb-4">Add Morning Stock</h2>
-              <StockForm time={EntryTime.MORNING} onAddStock={handleAddStock} />
+              <StockForm time={EntryTime.MORNING} onAddStock={handleAddStock} selectedDate={selectedDate} />
             </div>
             
             <div>
@@ -78,12 +109,12 @@ const StockEntry = () => {
           </div>
           
           <div>
-            <h2 className="text-xl font-semibold mb-4">Today's Morning Entries</h2>
+            <h2 className="text-xl font-semibold mb-4">Morning Entries for {format(selectedDate, "dd MMMM yyyy")}</h2>
             {currentTimeEntries.length > 0 ? (
               <StockTable data={currentTimeEntries} showTime={false} />
             ) : (
               <div className="text-center py-8 neo-card">
-                <p className="text-muted-foreground">No morning entries for today yet. Add your first entry above.</p>
+                <p className="text-muted-foreground">No morning entries for this date yet. Add your first entry above.</p>
               </div>
             )}
           </div>
@@ -93,7 +124,7 @@ const StockEntry = () => {
           <div className="grid md:grid-cols-2 gap-8">
             <div>
               <h2 className="text-xl font-semibold mb-4">Add Noon Stock</h2>
-              <StockForm time={EntryTime.NOON} onAddStock={handleAddStock} />
+              <StockForm time={EntryTime.NOON} onAddStock={handleAddStock} selectedDate={selectedDate} />
             </div>
             
             <div>
@@ -120,12 +151,54 @@ const StockEntry = () => {
           </div>
           
           <div>
-            <h2 className="text-xl font-semibold mb-4">Today's Noon Entries</h2>
+            <h2 className="text-xl font-semibold mb-4">Noon Entries for {format(selectedDate, "dd MMMM yyyy")}</h2>
             {currentTimeEntries.length > 0 ? (
               <StockTable data={currentTimeEntries} showTime={false} />
             ) : (
               <div className="text-center py-8 neo-card">
-                <p className="text-muted-foreground">No noon entries for today yet. Add your first entry above.</p>
+                <p className="text-muted-foreground">No noon entries for this date yet. Add your first entry above.</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value={EntryTime.EVENING} className="space-y-6 animate-fade-in">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Add Evening Stock</h2>
+              <StockForm time={EntryTime.EVENING} onAddStock={handleAddStock} selectedDate={selectedDate} />
+            </div>
+            
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Entry Guidelines</h2>
+              <div className="neo-card p-6 space-y-4">
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Important</AlertTitle>
+                  <AlertDescription>
+                    Evening entries should be completed between 4 PM and 6 PM for late arrivals.
+                  </AlertDescription>
+                </Alert>
+                
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">When to use evening entry:</h3>
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                    <li>Late arrival stock received in the evening</li>
+                    <li>Special deliveries or unexpected shipments</li>
+                    <li>Additional purchases for high-demand items</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Evening Entries for {format(selectedDate, "dd MMMM yyyy")}</h2>
+            {currentTimeEntries.length > 0 ? (
+              <StockTable data={currentTimeEntries} showTime={false} />
+            ) : (
+              <div className="text-center py-8 neo-card">
+                <p className="text-muted-foreground">No evening entries for this date yet. Add your first entry above.</p>
               </div>
             )}
           </div>
