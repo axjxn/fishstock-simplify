@@ -71,7 +71,7 @@ const StockEntry = () => {
         onValueChange={(value) => setActiveTab(value as EntryTime)}
         className="space-y-6"
       >
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
+        <TabsList className="grid w-full">
           <TabsTrigger value={EntryTime.MORNING}>Morning Entry (6 AM - 9 AM)</TabsTrigger>
           <TabsTrigger value={EntryTime.NOON}>Noon Entry (12 PM)</TabsTrigger>
           <TabsTrigger value={EntryTime.EVENING}>Evening Entry (4 PM - 6 PM)</TabsTrigger>
