@@ -23,10 +23,10 @@ const Dashboard = () => {
   }, [] as { name: string; value: number }[]).slice(0, 6); // Limit to top 6 items
   
   return (
-    <div className="page-container">
+    <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
         <div>
-          <h1 className="page-title">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
             Overview of your fish stock inventory and sales
           </p>

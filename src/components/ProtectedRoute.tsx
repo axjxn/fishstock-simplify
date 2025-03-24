@@ -9,7 +9,7 @@ type ProtectedRouteProps = {
 const ProtectedRoute = ({ requiredRole }: ProtectedRouteProps) => {
   const { user, loading, isAdmin, isStaff } = useAuth();
 
-  // If still loading auth state, show nothing
+  // If still loading auth state, show a loading indicator
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
