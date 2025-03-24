@@ -1,14 +1,31 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Fish, ClipboardList, BarChart3, Menu, X } from "lucide-react";
+import { Fish, ClipboardList, BarChart3, Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAdmin, signOut } = useAuth();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   const navItems = [
     { name: "Dashboard", path: "/", icon: <BarChart3 className="h-4 w-4" /> },
@@ -47,6 +64,32 @@ const Navbar = () => {
             ))}
           </nav>
 
+          {/* User menu */}
+          {user && (
+            <div className="hidden md:flex items-center ml-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>
+                    <p className="font-medium">{user.email}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {isAdmin ? "Admin" : "Staff"}
+                    </p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+
           {/* Mobile menu button */}
           <button
             className="md:hidden flex items-center justify-center rounded-full w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -78,6 +121,16 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+
+            {user && (
+              <div
+                className="flex items-center px-3 py-3 rounded-lg text-base font-medium text-muted-foreground mt-2 border-t pt-4"
+                onClick={handleSignOut}
+              >
+                <LogOut className="mr-3 h-4 w-4" />
+                <span>Log out</span>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -7,8 +7,10 @@ import { useState } from "react";
 import StockTable from "@/components/StockTable";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/AuthContext";
 
 const StockEntry = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<EntryTime>(EntryTime.MORNING);
   const [localStockPurchases, setLocalStockPurchases] = useState(stockPurchases);
   
@@ -29,7 +31,7 @@ const StockEntry = () => {
   const currentTimeEntries = getCurrentTimeEntries();
   
   return (
-    <div className="page-container">
+    <div className="page-container mt-20 px-4 md:px-6 max-w-7xl mx-auto">
       <h1 className="page-title">Stock Entry</h1>
       <p className="text-muted-foreground mb-8">
         Record new stock purchases for your inventory
