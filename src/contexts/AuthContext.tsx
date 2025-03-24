@@ -71,22 +71,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Check user roles
         console.log("Checking roles for existing user:", session.user.id);
         
-        supabase.rpc('is_admin', { user_id: session.user.id })
-          .then(({ data, error }) => {
-            if (error) console.error("Admin check error:", error);
-            console.log("Is admin:", data);
-            setIsAdmin(!!data);
-          });
-        
-        supabase.rpc('is_staff_or_admin', { user_id: session.user.id })
-          .then(({ data, error }) => {
-            if (error) console.error("Staff check error:", error);
-            console.log("Is staff:", data);
-            setIsStaff(!!data);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
+        // Fixed Promise handling for role checks
+        Promise.all([
+          supabase.rpc('is_admin', { user_id: session.user.id }),
+          supabase.rpc('is_staff_or_admin', { user_id: session.user.id })
+        ]).then(([adminResult, staffResult]) => {
+          if (adminResult.error) console.error("Admin check error:", adminResult.error);
+          if (staffResult.error) console.error("Staff check error:", staffResult.error);
+          
+          console.log("Is admin:", adminResult.data);
+          console.log("Is staff:", staffResult.data);
+          
+          setIsAdmin(!!adminResult.data);
+          setIsStaff(!!staffResult.data);
+        }).catch(error => {
+          console.error("Error checking roles:", error);
+        }).finally(() => {
+          setLoading(false);
+        });
       } else {
         setLoading(false);
       }
