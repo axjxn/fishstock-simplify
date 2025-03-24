@@ -11,7 +11,6 @@ import StockLeft from "./pages/StockLeft";
 import Reports from "./pages/Reports";
 import Auth from "./pages/Auth";
 import Navbar from "./components/Navbar";
-import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 
 // Create the query client outside of the component
@@ -25,20 +24,12 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             
-            {/* Protected routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<Navbar />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/stock-entry" element={<StockEntry />} />
-                <Route path="/stock-left" element={<StockLeft />} />
-              </Route>
-            </Route>
-            
-            {/* Admin-only routes */}
-            <Route element={<ProtectedRoute requiredRole="admin" />}>
-              <Route element={<Navbar />}>
-                <Route path="/reports" element={<Reports />} />
-              </Route>
+            {/* All routes accessible without authentication */}
+            <Route element={<Navbar />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/stock-entry" element={<StockEntry />} />
+              <Route path="/stock-left" element={<StockLeft />} />
+              <Route path="/reports" element={<Reports />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />

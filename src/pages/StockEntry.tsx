@@ -7,10 +7,8 @@ import { useState } from "react";
 import StockTable from "@/components/StockTable";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useAuth } from "@/contexts/AuthContext";
 
 const StockEntry = () => {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<EntryTime>(EntryTime.MORNING);
   const [localStockPurchases, setLocalStockPurchases] = useState(stockPurchases);
   

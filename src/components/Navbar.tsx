@@ -2,7 +2,7 @@
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Fish, ClipboardList, BarChart3, Menu, X, LogOut, User } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,12 +18,8 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   
-  useEffect(() => {
-    console.log("Navbar rendered", { user, isAdmin, location });
-  }, [user, isAdmin, location]);
-
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleSignOut = async () => {
@@ -31,16 +27,13 @@ const Navbar = () => {
     navigate("/auth");
   };
 
+  // Show all navigation items regardless of user role
   const navItems = [
     { name: "Dashboard", path: "/", icon: <BarChart3 className="h-4 w-4" /> },
     { name: "Stock Entry", path: "/stock-entry", icon: <Fish className="h-4 w-4" /> },
     { name: "Stock Left", path: "/stock-left", icon: <ClipboardList className="h-4 w-4" /> },
+    { name: "Reports", path: "/reports", icon: <BarChart3 className="h-4 w-4" /> },
   ];
-  
-  // Add the Reports item only for admin users
-  if (isAdmin) {
-    navItems.push({ name: "Reports", path: "/reports", icon: <BarChart3 className="h-4 w-4" /> });
-  }
 
   return (
     <>
@@ -73,7 +66,7 @@ const Navbar = () => {
               ))}
             </nav>
 
-            {/* User menu */}
+            {/* User menu - only show if user is logged in */}
             {user && (
               <div className="hidden md:flex items-center ml-4">
                 <DropdownMenu>
@@ -85,9 +78,6 @@ const Navbar = () => {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>
                       <p className="font-medium">{user.email}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {isAdmin ? "Admin" : "Staff"}
-                      </p>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
@@ -96,6 +86,15 @@ const Navbar = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </div>
+            )}
+
+            {/* Sign in link if not logged in */}
+            {!user && (
+              <div className="hidden md:flex items-center ml-4">
+                <Link to="/auth" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                  Sign In
+                </Link>
               </div>
             )}
 
@@ -131,10 +130,26 @@ const Navbar = () => {
                 </Link>
               ))}
 
+              {/* Sign in link in mobile menu if not logged in */}
+              {!user && (
+                <Link
+                  to="/auth"
+                  className="flex items-center px-3 py-3 rounded-lg text-base font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <User className="mr-3 h-4 w-4" />
+                  <span>Sign In</span>
+                </Link>
+              )}
+
+              {/* Log out button in mobile menu if logged in */}
               {user && (
                 <div
                   className="flex items-center px-3 py-3 rounded-lg text-base font-medium text-muted-foreground mt-2 border-t pt-4 cursor-pointer"
-                  onClick={handleSignOut}
+                  onClick={() => {
+                    handleSignOut();
+                    setIsMenuOpen(false);
+                  }}
                 >
                   <LogOut className="mr-3 h-4 w-4" />
                   <span>Log out</span>
