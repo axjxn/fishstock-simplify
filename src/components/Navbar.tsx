@@ -2,7 +2,7 @@
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Fish, ClipboardList, BarChart3, Menu, X, LogOut, User } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,10 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
+  
+  useEffect(() => {
+    console.log("Navbar rendered", { user, isAdmin, location });
+  }, [user, isAdmin, location]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 

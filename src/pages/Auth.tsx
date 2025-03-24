@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ const Auth = () => {
   const { user, signIn, signUp, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
   
   // Form states
   const [email, setEmail] = useState("");
@@ -19,6 +20,13 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  // Check if user is already logged in
+  useEffect(() => {
+    if (user && !loading) {
+      navigate("/", { replace: true });
+    }
+  }, [user, loading, navigate]);
+  
   // Redirect if already logged in
   if (user && !loading) {
     return <Navigate to="/" replace />;
@@ -31,6 +39,7 @@ const Auth = () => {
     
     try {
       await signIn(email, password);
+      // Navigation will happen automatically due to the useEffect
     } catch (err) {
       console.error("Sign in error:", err);
       setError("Failed to sign in. Please check your credentials.");

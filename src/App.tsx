@@ -44,7 +44,6 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           
-          {/* Toasters should be placed at the end */}
           <Toaster />
           <Sonner />
         </TooltipProvider>
