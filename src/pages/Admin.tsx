@@ -120,7 +120,7 @@ const Admin = () => {
           rate_per_kg: ratePerKg,
           total_cost: totalCost
         })
-        .eq('id', editingItem.id);
+        .eq('id', String(editingItem.id));
 
       if (error) {
         throw error;
@@ -162,7 +162,7 @@ const Admin = () => {
       const { error } = await supabase
         .from('stock_purchases')
         .delete()
-        .eq('id', id);
+        .eq('id', String(id));
 
       if (error) {
         throw error;
@@ -420,3 +420,4 @@ const Admin = () => {
 };
 
 export default Admin;
+
