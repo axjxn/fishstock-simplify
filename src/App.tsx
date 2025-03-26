@@ -10,6 +10,7 @@ import StockEntry from "./pages/StockEntry";
 import StockLeft from "./pages/StockLeft";
 import Reports from "./pages/Reports";
 import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/stock-entry" element={<StockEntry />} />
               <Route path="/stock-left" element={<StockLeft />} />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/admin" element={<Admin />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
