@@ -1,3 +1,4 @@
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,14 +21,22 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-const NavLink = ({ children, to }: { children: React.ReactNode; to: string }) => (
+interface NavLinkProps {
+  children: React.ReactNode;
+  to: string;
+  className?: string;
+  onClick?: () => void;
+}
+
+const NavLink = ({ children, to, className, onClick }: NavLinkProps) => (
   <RouterNavLink
     to={to}
     className={({ isActive }) =>
       isActive
-        ? "font-semibold text-primary underline underline-offset-4"
-        : "text-muted-foreground hover:text-foreground"
+        ? `font-semibold text-primary underline underline-offset-4 ${className || ""}`
+        : `text-muted-foreground hover:text-foreground ${className || ""}`
     }
+    onClick={onClick}
   >
     {children}
   </RouterNavLink>
