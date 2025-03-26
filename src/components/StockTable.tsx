@@ -5,8 +5,8 @@ import BatchIndicator from "./BatchIndicator";
 import { useState } from "react";
 import { Search } from "lucide-react";
 
-interface StockItem {
-  id: string;
+export interface StockItem {
+  id: string | number;
   date: string;
   time?: string;
   itemName: string;
@@ -60,7 +60,7 @@ const StockTable = ({ data, showTime = true }: StockTableProps) => {
               filteredData.map((item) => {
                 const ageInDays = calculateAgeInDays(item.date);
                 return (
-                  <TableRow key={item.id} className="group">
+                  <TableRow key={`${item.id}`} className="group">
                     <TableCell className="font-medium">{item.itemName}</TableCell>
                     {showTime && <TableCell>{item.time}</TableCell>}
                     <TableCell>{item.batchNo}</TableCell>

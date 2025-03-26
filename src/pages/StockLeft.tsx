@@ -10,6 +10,11 @@ import BatchIndicator from "@/components/BatchIndicator";
 import { fetchStockPurchasesByDateAndTime, addStockLeftEntry } from "@/utils/supabaseHelpers";
 import { EntryTime } from "@/utils/stockUtils";
 
+interface PurchasesByItemData {
+  totalWeight: number;
+  batchNumbers: string[];
+}
+
 const StockLeft = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,7 +47,7 @@ const StockLeft = () => {
   }, []);
   
   // Group purchases by item
-  const purchasesByItem = todayPurchases.reduce((acc, item) => {
+  const purchasesByItem: Record<string, PurchasesByItemData> = todayPurchases.reduce((acc, item) => {
     if (!acc[item.itemName]) {
       acc[item.itemName] = {
         totalWeight: 0,
@@ -54,7 +59,7 @@ const StockLeft = () => {
     acc[item.itemName].batchNumbers.push(item.batchNo);
     
     return acc;
-  }, {} as Record<string, { totalWeight: number; batchNumbers: string[] }>);
+  }, {} as Record<string, PurchasesByItemData>);
   
   // Prepare data for table
   const tableData = Object.entries(purchasesByItem).map(([itemName, data]) => ({

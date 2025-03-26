@@ -4,7 +4,7 @@ import DashboardCard from "@/components/DashboardCard";
 import { formatCurrency, formatWeight } from "@/utils/stockUtils";
 import { dashboardStats, stockAlerts, stockPurchases } from "@/data/mockData";
 import BatchIndicator from "@/components/BatchIndicator";
-import StockTable from "@/components/StockTable";
+import StockTable, { StockItem } from "@/components/StockTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 
@@ -21,6 +21,18 @@ const Dashboard = () => {
     }
     return acc;
   }, [] as { name: string; value: number }[]).slice(0, 6); // Limit to top 6 items
+  
+  // Convert stockPurchases to StockItem[] for compatibility with StockTable
+  const stockTableData: StockItem[] = stockPurchases.map(item => ({
+    id: item.id,
+    date: item.date,
+    time: item.time,
+    itemName: item.itemName,
+    batchNo: item.batchNo,
+    weight: item.weight,
+    ratePerKg: item.ratePerKg,
+    totalCost: item.totalCost
+  }));
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -75,7 +87,7 @@ const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <StockTable data={stockPurchases.slice(0, 5)} />
+            <StockTable data={stockTableData.slice(0, 5)} />
           </CardContent>
         </Card>
         
