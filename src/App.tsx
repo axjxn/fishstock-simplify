@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
 import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Create the query client outside of the component
 const queryClient = new QueryClient();
@@ -25,13 +26,22 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             
-            {/* All routes accessible without authentication */}
+            {/* Routes with Navbar */}
             <Route element={<Navbar />}>
+              {/* Public routes */}
               <Route path="/" element={<Index />} />
-              <Route path="/stock-entry" element={<StockEntry />} />
-              <Route path="/stock-left" element={<StockLeft />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/admin" element={<Admin />} />
+              
+              {/* Staff only routes */}
+              <Route element={<ProtectedRoute requiredRole="staff" />}>
+                <Route path="/stock-entry" element={<StockEntry />} />
+                <Route path="/stock-left" element={<StockLeft />} />
+                <Route path="/reports" element={<Reports />} />
+              </Route>
+              
+              {/* Admin only routes */}
+              <Route element={<ProtectedRoute requiredRole="admin" />}>
+                <Route path="/admin" element={<Admin />} />
+              </Route>
             </Route>
             
             <Route path="*" element={<NotFound />} />
