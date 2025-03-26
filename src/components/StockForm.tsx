@@ -5,10 +5,11 @@ import { calculateTotalCost, EntryTime, generateBatchNumber, getTodayFormatted }
 import { Search, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { addStockPurchase } from "@/utils/supabaseHelpers";
+import { StockItem } from "./StockTable";
 
 interface StockFormProps {
   time: EntryTime;
-  onAddStock?: (data: any) => void;
+  onAddStock?: (data: StockItem) => void;
 }
 
 const StockForm = ({ time, onAddStock }: StockFormProps) => {

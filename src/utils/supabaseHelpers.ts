@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { EntryTime } from "./stockUtils";
+import { EntryTime } from "@/utils/stockUtils";
+import { StockItem } from "@/components/StockTable";
 
 export interface StockPurchaseItem {
   id?: string;
@@ -23,7 +24,7 @@ export interface StockLeftItem {
 }
 
 // Function to fetch all stock purchases
-export const fetchStockPurchases = async () => {
+export const fetchStockPurchases = async (): Promise<StockItem[]> => {
   const { data, error } = await supabase
     .from('stock_purchases')
     .select('*')
@@ -48,7 +49,7 @@ export const fetchStockPurchases = async () => {
 };
 
 // Function to fetch stock purchases for a specific date and time
-export const fetchStockPurchasesByDateAndTime = async (date: string, time: EntryTime) => {
+export const fetchStockPurchasesByDateAndTime = async (date: string, time: EntryTime): Promise<StockItem[]> => {
   const { data, error } = await supabase
     .from('stock_purchases')
     .select('*')

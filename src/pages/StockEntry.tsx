@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EntryTime } from "@/utils/stockUtils";
 import StockForm from "@/components/StockForm";
 import { useState, useEffect } from "react";
-import StockTable from "@/components/StockTable";
+import StockTable, { StockItem } from "@/components/StockTable";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { fetchStockPurchasesByDateAndTime } from "@/utils/supabaseHelpers";
@@ -11,7 +11,7 @@ import { getTodayFormatted } from "@/utils/stockUtils";
 
 const StockEntry = () => {
   const [activeTab, setActiveTab] = useState<EntryTime>(EntryTime.MORNING);
-  const [stockPurchases, setStockPurchases] = useState<any[]>([]);
+  const [stockPurchases, setStockPurchases] = useState<StockItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Fetch stock entries for the current date and time
@@ -20,7 +20,20 @@ const StockEntry = () => {
     try {
       const todayFormatted = getTodayFormatted();
       const entries = await fetchStockPurchasesByDateAndTime(todayFormatted, activeTab);
-      setStockPurchases(entries);
+      
+      // Convert entries to StockItem format
+      const formattedEntries: StockItem[] = entries.map(entry => ({
+        id: entry.id,
+        date: entry.date,
+        time: entry.time,
+        itemName: entry.itemName,
+        batchNo: entry.batchNo,
+        weight: entry.weight,
+        ratePerKg: entry.ratePerKg,
+        totalCost: entry.totalCost
+      }));
+      
+      setStockPurchases(formattedEntries);
     } catch (error) {
       console.error('Error fetching stock entries:', error);
     } finally {
@@ -33,7 +46,7 @@ const StockEntry = () => {
     fetchCurrentTimeEntries();
   }, [activeTab]);
   
-  const handleAddStock = (newStock: any) => {
+  const handleAddStock = (newStock: StockItem) => {
     // Optimistically add the new stock to the local state
     setStockPurchases(prev => [newStock, ...prev]);
     
