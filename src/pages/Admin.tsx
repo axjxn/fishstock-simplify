@@ -41,6 +41,14 @@ const Admin = () => {
           description: error.message,
           variant: "destructive"
         });
+        setStockPurchases([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!data || data.length === 0) {
+        setStockPurchases([]);
+        setIsLoading(false);
         return;
       }
       
@@ -57,13 +65,14 @@ const Admin = () => {
       }));
       
       setStockPurchases(formattedData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
       toast({
         title: "An error occurred",
         description: "Could not fetch stock data",
         variant: "destructive"
       });
+      setStockPurchases([]);
     } finally {
       setIsLoading(false);
     }
@@ -275,8 +284,8 @@ const Admin = () => {
         
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
-            <Spinner className="h-8 w-8" />
-            <span className="ml-2">Loading stock data...</span>
+            <Spinner className="h-8 w-8 mr-2" />
+            <span>Loading stock data...</span>
           </div>
         ) : (
           <div className="rounded-xl border overflow-hidden">
@@ -406,7 +415,7 @@ const Admin = () => {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No stock entries found.
+                      No stock entries found. Start by adding stock entries from the Stock Entry page.
                     </TableCell>
                   </TableRow>
                 )}
@@ -420,4 +429,3 @@ const Admin = () => {
 };
 
 export default Admin;
-

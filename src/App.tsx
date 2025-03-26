@@ -15,8 +15,16 @@ import Navbar from "./components/Navbar";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Create the query client outside of the component
-const queryClient = new QueryClient();
+// Create the query client with better error and retry configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 30000
+    }
+  }
+});
 
 const App = () => (
   <BrowserRouter>
