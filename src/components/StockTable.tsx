@@ -1,13 +1,23 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { StockPurchase } from "@/data/mockData";
 import { calculateAgeInDays, formatCurrency, formatWeight } from "@/utils/stockUtils";
 import BatchIndicator from "./BatchIndicator";
 import { useState } from "react";
 import { Search } from "lucide-react";
 
+interface StockItem {
+  id: string;
+  date: string;
+  time?: string;
+  itemName: string;
+  batchNo: string;
+  weight: number;
+  ratePerKg: number;
+  totalCost: number;
+}
+
 interface StockTableProps {
-  data: StockPurchase[];
+  data: StockItem[];
   showTime?: boolean;
 }
 
@@ -69,7 +79,7 @@ const StockTable = ({ data, showTime = true }: StockTableProps) => {
             ) : (
               <TableRow>
                 <TableCell colSpan={showTime ? 7 : 6} className="text-center py-8 text-muted-foreground">
-                  No items found. Try a different search term.
+                  {searchTerm ? "No items found. Try a different search term." : "No items available yet."}
                 </TableCell>
               </TableRow>
             )}

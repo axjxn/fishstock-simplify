@@ -2,31 +2,44 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EntryTime } from "@/utils/stockUtils";
 import StockForm from "@/components/StockForm";
-import { stockPurchases } from "@/data/mockData";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StockTable from "@/components/StockTable";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { fetchStockPurchasesByDateAndTime } from "@/utils/supabaseHelpers";
+import { getTodayFormatted } from "@/utils/stockUtils";
 
 const StockEntry = () => {
   const [activeTab, setActiveTab] = useState<EntryTime>(EntryTime.MORNING);
-  const [localStockPurchases, setLocalStockPurchases] = useState(stockPurchases);
+  const [stockPurchases, setStockPurchases] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch stock entries for the current date and time
+  const fetchCurrentTimeEntries = async () => {
+    setIsLoading(true);
+    try {
+      const todayFormatted = getTodayFormatted();
+      const entries = await fetchStockPurchasesByDateAndTime(todayFormatted, activeTab);
+      setStockPurchases(entries);
+    } catch (error) {
+      console.error('Error fetching stock entries:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Fetch data on component mount and when tab changes
+  useEffect(() => {
+    fetchCurrentTimeEntries();
+  }, [activeTab]);
   
   const handleAddStock = (newStock: any) => {
-    setLocalStockPurchases([newStock, ...localStockPurchases]);
-  };
-  
-  // Filter stock entries for the current day and time
-  const getCurrentTimeEntries = () => {
-    const today = new Date();
-    const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+    // Optimistically add the new stock to the local state
+    setStockPurchases(prev => [newStock, ...prev]);
     
-    return localStockPurchases.filter(
-      item => item.date === formattedDate && item.time === activeTab
-    );
+    // Refresh the data from the server to get the correct IDs and any other updates
+    fetchCurrentTimeEntries();
   };
-  
-  const currentTimeEntries = getCurrentTimeEntries();
   
   return (
     <div className="page-container mt-20 px-4 md:px-6 max-w-7xl mx-auto">
@@ -79,8 +92,13 @@ const StockEntry = () => {
           
           <div>
             <h2 className="text-xl font-semibold mb-4">Today's Morning Entries</h2>
-            {currentTimeEntries.length > 0 ? (
-              <StockTable data={currentTimeEntries} showTime={false} />
+            {isLoading ? (
+              <div className="text-center py-8 neo-card">
+                <div className="inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-2 text-muted-foreground">Loading entries...</p>
+              </div>
+            ) : stockPurchases.length > 0 ? (
+              <StockTable data={stockPurchases} showTime={false} />
             ) : (
               <div className="text-center py-8 neo-card">
                 <p className="text-muted-foreground">No morning entries for today yet. Add your first entry above.</p>
@@ -121,8 +139,13 @@ const StockEntry = () => {
           
           <div>
             <h2 className="text-xl font-semibold mb-4">Today's Noon Entries</h2>
-            {currentTimeEntries.length > 0 ? (
-              <StockTable data={currentTimeEntries} showTime={false} />
+            {isLoading ? (
+              <div className="text-center py-8 neo-card">
+                <div className="inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-2 text-muted-foreground">Loading entries...</p>
+              </div>
+            ) : stockPurchases.length > 0 ? (
+              <StockTable data={stockPurchases} showTime={false} />
             ) : (
               <div className="text-center py-8 neo-card">
                 <p className="text-muted-foreground">No noon entries for today yet. Add your first entry above.</p>

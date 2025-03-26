@@ -36,6 +36,78 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_left: {
+        Row: {
+          created_at: string
+          date: string
+          estimated_sales: number
+          id: string
+          item_name: string
+          purchased_amount: number
+          remaining_amount: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          estimated_sales: number
+          id?: string
+          item_name: string
+          purchased_amount: number
+          remaining_amount: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          estimated_sales?: number
+          id?: string
+          item_name?: string
+          purchased_amount?: number
+          remaining_amount?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      stock_purchases: {
+        Row: {
+          batch_no: string
+          created_at: string
+          date: string
+          id: string
+          item_name: string
+          rate_per_kg: number
+          time: Database["public"]["Enums"]["entry_time"]
+          total_cost: number
+          user_id: string | null
+          weight: number
+        }
+        Insert: {
+          batch_no: string
+          created_at?: string
+          date: string
+          id?: string
+          item_name: string
+          rate_per_kg: number
+          time: Database["public"]["Enums"]["entry_time"]
+          total_cost: number
+          user_id?: string | null
+          weight: number
+        }
+        Update: {
+          batch_no?: string
+          created_at?: string
+          date?: string
+          id?: string
+          item_name?: string
+          rate_per_kg?: number
+          time?: Database["public"]["Enums"]["entry_time"]
+          total_cost?: number
+          user_id?: string | null
+          weight?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -55,6 +127,7 @@ export type Database = {
       }
     }
     Enums: {
+      entry_time: "Morning" | "Noon" | "Night"
       user_role: "staff" | "admin"
     }
     CompositeTypes: {

@@ -1,21 +1,45 @@
 
 import { useToast } from "@/hooks/use-toast";
-import { fishTypes, stockLeftEntries, stockPurchases } from "@/data/mockData";
+import { fishTypes } from "@/data/mockData";
 import { calculateEstimatedSales, formatWeight, getTodayFormatted } from "@/utils/stockUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Save, RotateCcw, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import BatchIndicator from "@/components/BatchIndicator";
+import { fetchStockPurchasesByDateAndTime, addStockLeftEntry } from "@/utils/supabaseHelpers";
+import { EntryTime } from "@/utils/stockUtils";
 
 const StockLeft = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [stockLeft, setStockLeft] = useState<Record<string, number>>({});
+  const [todayPurchases, setTodayPurchases] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Get today's purchases
-  const today = getTodayFormatted();
-  const todayPurchases = stockPurchases.filter(item => item.date === today);
+  // Fetch today's purchases
+  useEffect(() => {
+    const fetchPurchases = async () => {
+      setIsLoading(true);
+      try {
+        const today = getTodayFormatted();
+        
+        // Fetch both morning and noon entries
+        const morningEntries = await fetchStockPurchasesByDateAndTime(today, EntryTime.MORNING);
+        const noonEntries = await fetchStockPurchasesByDateAndTime(today, EntryTime.NOON);
+        
+        // Combine entries
+        setTodayPurchases([...morningEntries, ...noonEntries]);
+      } catch (error) {
+        console.error('Error fetching today\'s purchases:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPurchases();
+  }, []);
   
   // Group purchases by item
   const purchasesByItem = todayPurchases.reduce((acc, item) => {
@@ -60,7 +84,7 @@ const StockLeft = () => {
   };
   
   // Handle save
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validate entries
     const allEntered = tableData.every(item => stockLeft[item.itemName] !== undefined);
     
@@ -73,14 +97,43 @@ const StockLeft = () => {
       return;
     }
     
-    // Here you would save the data to your backend
-    toast({
-      title: "Night Entry Saved",
-      description: "Stock left has been recorded successfully",
-    });
-    
-    // Clear form after save
-    setStockLeft({});
+    try {
+      setIsSaving(true);
+      const today = getTodayFormatted();
+      
+      // Save each stock left entry to Supabase
+      for (const item of tableData) {
+        const estimatedSales = calculateEstimatedSaleForItem(
+          item.purchasedAmount, 
+          stockLeft[item.itemName] || 0
+        );
+        
+        await addStockLeftEntry({
+          date: today,
+          itemName: item.itemName,
+          purchasedAmount: item.purchasedAmount,
+          remainingAmount: stockLeft[item.itemName] || 0,
+          estimatedSales
+        });
+      }
+      
+      toast({
+        title: "Night Entry Saved",
+        description: "Stock left has been recorded successfully",
+      });
+      
+      // Clear form after save
+      setStockLeft({});
+    } catch (error) {
+      console.error('Error saving stock left entries:', error);
+      toast({
+        title: "Error Saving Entries",
+        description: "Could not save the stock left entries. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   // Reset form
@@ -116,81 +169,89 @@ const StockLeft = () => {
                 />
               </div>
               
-              <div className="rounded-xl border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[220px] font-medium">Item Name</TableHead>
-                      <TableHead className="font-medium">Batch Numbers</TableHead>
-                      <TableHead className="font-medium text-right">Purchased Amount</TableHead>
-                      <TableHead className="font-medium text-right w-[180px]">Stock Left (Kg)</TableHead>
-                      <TableHead className="font-medium text-right">Estimated Sales</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTableData.length > 0 ? (
-                      filteredTableData.map((item) => {
-                        const estimatedSales = calculateEstimatedSaleForItem(
-                          item.purchasedAmount, 
-                          stockLeft[item.itemName] || 0
-                        );
-                        
-                        return (
-                          <TableRow key={item.itemName}>
-                            <TableCell className="font-medium flex items-center">
-                              <BatchIndicator ageInDays={0} className="mr-2" />
-                              {item.itemName}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              <div className="flex flex-wrap gap-1">
-                                {item.batchNumbers.map((batch, index) => (
-                                  <span key={batch} className="bg-secondary px-1.5 py-0.5 rounded-full">
-                                    {batch}
-                                  </span>
-                                ))}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatWeight(item.purchasedAmount)}
-                            </TableCell>
-                            <TableCell>
-                              <input
-                                type="number"
-                                step="0.1"
-                                min="0"
-                                max={item.purchasedAmount}
-                                value={stockLeft[item.itemName] || ""}
-                                onChange={(e) => handleStockLeftChange(item.itemName, e.target.value)}
-                                className="input-field text-right"
-                                placeholder="0.0"
-                              />
-                            </TableCell>
-                            <TableCell className="text-right font-medium">
-                              {estimatedSales > 0 ? (
-                                <span className="text-fresh font-medium">{formatWeight(estimatedSales)}</span>
-                              ) : (
-                                <span className="text-muted-foreground">Pending input</span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    ) : (
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <div className="inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <p className="mt-2 text-muted-foreground">Loading today's stock data...</p>
+                </div>
+              ) : (
+                <div className="rounded-xl border overflow-hidden">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                          {searchTerm ? "No items found matching your search." : "No stock purchases recorded for today."}
-                        </TableCell>
+                        <TableHead className="w-[220px] font-medium">Item Name</TableHead>
+                        <TableHead className="font-medium">Batch Numbers</TableHead>
+                        <TableHead className="font-medium text-right">Purchased Amount</TableHead>
+                        <TableHead className="font-medium text-right w-[180px]">Stock Left (Kg)</TableHead>
+                        <TableHead className="font-medium text-right">Estimated Sales</TableHead>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTableData.length > 0 ? (
+                        filteredTableData.map((item) => {
+                          const estimatedSales = calculateEstimatedSaleForItem(
+                            item.purchasedAmount, 
+                            stockLeft[item.itemName] || 0
+                          );
+                          
+                          return (
+                            <TableRow key={item.itemName}>
+                              <TableCell className="font-medium flex items-center">
+                                <BatchIndicator ageInDays={0} className="mr-2" />
+                                {item.itemName}
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                <div className="flex flex-wrap gap-1">
+                                  {item.batchNumbers.map((batch, index) => (
+                                    <span key={batch} className="bg-secondary px-1.5 py-0.5 rounded-full">
+                                      {batch}
+                                    </span>
+                                  ))}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatWeight(item.purchasedAmount)}
+                              </TableCell>
+                              <TableCell>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  max={item.purchasedAmount}
+                                  value={stockLeft[item.itemName] || ""}
+                                  onChange={(e) => handleStockLeftChange(item.itemName, e.target.value)}
+                                  className="input-field text-right"
+                                  placeholder="0.0"
+                                />
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                {estimatedSales > 0 ? (
+                                  <span className="text-fresh font-medium">{formatWeight(estimatedSales)}</span>
+                                ) : (
+                                  <span className="text-muted-foreground">Pending input</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            {searchTerm ? "No items found matching your search." : "No stock purchases recorded for today."}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
               
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
                   onClick={handleReset}
                   className="button-outline flex items-center"
+                  disabled={isSaving || isLoading}
                 >
                   <RotateCcw className="h-4 w-4 mr-2" />
                   Reset
@@ -199,9 +260,14 @@ const StockLeft = () => {
                   type="button"
                   onClick={handleSave}
                   className="button-primary flex items-center"
+                  disabled={isSaving || isLoading}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Night Entry
+                  {isSaving ? (
+                    <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {isSaving ? "Saving..." : "Save Night Entry"}
                 </button>
               </div>
             </div>

@@ -1,9 +1,10 @@
 
 import { useState } from "react";
 import { fishTypes } from "@/data/mockData";
-import { calculateTotalCost, EntryTime, generateBatchNumber } from "@/utils/stockUtils";
+import { calculateTotalCost, EntryTime, generateBatchNumber, getTodayFormatted } from "@/utils/stockUtils";
 import { Search, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { addStockPurchase } from "@/utils/supabaseHelpers";
 
 interface StockFormProps {
   time: EntryTime;
@@ -18,6 +19,7 @@ const StockForm = ({ time, onAddStock }: StockFormProps) => {
     weight: "",
     ratePerKg: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [filteredFish, setFilteredFish] = useState<string[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [totalCost, setTotalCost] = useState<number | null>(null);
@@ -61,7 +63,7 @@ const StockForm = ({ time, onAddStock }: StockFormProps) => {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Form validation
@@ -74,41 +76,61 @@ const StockForm = ({ time, onAddStock }: StockFormProps) => {
       return;
     }
     
-    // Get today's date
-    const today = new Date();
-    const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
-    
-    // Create stock entry
-    const newStock = {
-      id: Date.now(),
-      date: formattedDate,
-      time,
-      itemName: formData.itemName,
-      batchNo: generateBatchNumber(),
-      weight: parseFloat(formData.weight),
-      ratePerKg: parseFloat(formData.ratePerKg),
-      totalCost: totalCost || 0
-    };
-    
-    // Call onAddStock callback if provided
-    if (onAddStock) {
-      onAddStock(newStock);
+    try {
+      setIsSubmitting(true);
+      
+      // Get today's date
+      const formattedDate = getTodayFormatted();
+      const weight = parseFloat(formData.weight);
+      const ratePerKg = parseFloat(formData.ratePerKg);
+      const calculatedTotalCost = calculateTotalCost(weight, ratePerKg);
+      
+      // Create stock entry
+      const newStock = {
+        date: formattedDate,
+        time,
+        itemName: formData.itemName,
+        batchNo: generateBatchNumber(),
+        weight,
+        ratePerKg,
+        totalCost: calculatedTotalCost
+      };
+      
+      // Save to Supabase
+      await addStockPurchase(newStock);
+      
+      // Call onAddStock callback if provided
+      if (onAddStock) {
+        onAddStock({
+          id: Date.now().toString(), // This ID will be replaced when the list refreshes from DB
+          ...newStock
+        });
+      }
+      
+      // Show success toast
+      toast({
+        title: "Stock entry added",
+        description: `Added ${formData.weight} Kg of ${formData.itemName}`,
+      });
+      
+      // Reset form
+      setFormData({
+        itemName: "",
+        weight: "",
+        ratePerKg: "",
+      });
+      setSearchTerm("");
+      setTotalCost(null);
+    } catch (error) {
+      toast({
+        title: "Error adding stock",
+        description: "Could not save the stock entry. Please try again.",
+        variant: "destructive"
+      });
+      console.error("Error saving stock entry:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Show success toast
-    toast({
-      title: "Stock entry added",
-      description: `Added ${formData.weight} Kg of ${formData.itemName}`,
-    });
-    
-    // Reset form
-    setFormData({
-      itemName: "",
-      weight: "",
-      ratePerKg: "",
-    });
-    setSearchTerm("");
-    setTotalCost(null);
   };
   
   // Clear form
@@ -200,14 +222,23 @@ const StockForm = ({ time, onAddStock }: StockFormProps) => {
       )}
 
       <div className="flex space-x-3 pt-2">
-        <button type="submit" className="button-primary flex-1 flex items-center justify-center">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Entry
+        <button 
+          type="submit" 
+          className="button-primary flex-1 flex items-center justify-center"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+          ) : (
+            <Plus className="h-4 w-4 mr-2" />
+          )}
+          {isSubmitting ? "Saving..." : "Add Entry"}
         </button>
         <button 
           type="button" 
           onClick={clearForm}
           className="button-outline flex items-center justify-center"
+          disabled={isSubmitting}
         >
           <X className="h-4 w-4 mr-2" />
           Clear

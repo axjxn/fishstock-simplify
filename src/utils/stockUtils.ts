@@ -1,4 +1,3 @@
-
 // Stock status determination based on age
 export enum StockStatus {
   FRESH = "fresh",
@@ -68,8 +67,9 @@ export const parseFormattedDate = (dateString: string): Date => {
 };
 
 // Get today's date in the formatted string format
-export const getTodayFormatted = (): string => {
-  return formatDate(new Date());
+export const getTodayFormatted = () => {
+  const today = new Date();
+  return `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
 };
 
 // Calculate age in days from a given date
