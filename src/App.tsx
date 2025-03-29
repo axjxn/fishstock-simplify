@@ -25,16 +25,21 @@ const App = () => {
         refetchOnWindowFocus: false,
         retry: 2,
         retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-        staleTime: 30000,
-        onError: (error) => {
-          console.error("Query error:", error);
-        }
+        staleTime: 30000
       },
       mutations: {
-        retry: 1,
-        onError: (error) => {
-          console.error("Mutation error:", error);
-        }
+        retry: 1
+      }
+    },
+    logger: {
+      log: (message) => {
+        console.log(message);
+      },
+      warn: (message) => {
+        console.warn(message);
+      },
+      error: (error) => {
+        console.error("Query/Mutation error:", error);
       }
     }
   }));
