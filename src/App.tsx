@@ -26,17 +26,9 @@ const App = () => {
         retry: 2,
         retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
         staleTime: 30000,
-        // Use onError within query options for error handling
-        onError: (error) => {
-          console.error("Query error:", error);
-        }
       },
       mutations: {
         retry: 1,
-        // Use onError within mutation options for error handling
-        onError: (error) => {
-          console.error("Mutation error:", error);
-        }
       }
     }
   }));
@@ -80,3 +72,4 @@ const App = () => {
 };
 
 export default App;
+
