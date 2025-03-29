@@ -35,7 +35,14 @@ export const fetchStockPurchases = async (): Promise<StockItem[]> => {
     
     if (error) {
       console.error('Error fetching stock purchases:', error);
-      toast.error("Failed to load stock data");
+      
+      // Show different error message based on error code
+      if (error.code === 'PGRST301') {
+        toast.error("Permission denied. You might not have proper access rights.");
+      } else {
+        toast.error("Failed to load stock data: " + error.message);
+      }
+      
       throw error;
     }
     
@@ -59,7 +66,7 @@ export const fetchStockPurchases = async (): Promise<StockItem[]> => {
     }));
   } catch (err) {
     console.error("Error in fetchStockPurchases:", err);
-    toast.error("Failed to load stock data");
+    toast.error("Failed to load stock data. Please try again later.");
     return [];
   }
 };
@@ -77,7 +84,14 @@ export const fetchStockPurchasesByDateAndTime = async (date: string, time: Entry
     
     if (error) {
       console.error('Error fetching stock purchases by date and time:', error);
-      toast.error("Failed to load filtered stock data");
+      
+      // Show different error message based on error code
+      if (error.code === 'PGRST301') {
+        toast.error("Permission denied. You might not have proper access rights.");
+      } else {
+        toast.error("Failed to load filtered stock data: " + error.message);
+      }
+      
       throw error;
     }
     
@@ -101,7 +115,7 @@ export const fetchStockPurchasesByDateAndTime = async (date: string, time: Entry
     }));
   } catch (err) {
     console.error("Error in fetchStockPurchasesByDateAndTime:", err);
-    toast.error("Failed to load filtered stock data");
+    toast.error("Failed to load filtered stock data. Please try again later.");
     return [];
   }
 };
@@ -127,7 +141,16 @@ export const addStockPurchase = async (stockItem: StockPurchaseItem) => {
     
     if (error) {
       console.error('Error adding stock purchase:', error);
-      toast.error("Failed to add stock purchase");
+      
+      // Show different error message based on error code
+      if (error.code === 'PGRST301') {
+        toast.error("Permission denied. You don't have rights to add stock purchases.");
+      } else if (error.code === '23505') {
+        toast.error("This stock purchase already exists.");
+      } else {
+        toast.error("Failed to add stock purchase: " + error.message);
+      }
+      
       throw error;
     }
     
@@ -136,7 +159,7 @@ export const addStockPurchase = async (stockItem: StockPurchaseItem) => {
     return data;
   } catch (err) {
     console.error("Error in addStockPurchase:", err);
-    toast.error("Failed to add stock purchase");
+    toast.error("Failed to add stock purchase. Please try again later.");
     throw err;
   }
 };
@@ -152,7 +175,14 @@ export const fetchStockLeftEntries = async () => {
     
     if (error) {
       console.error('Error fetching stock left entries:', error);
-      toast.error("Failed to load stock left data");
+      
+      // Show different error message based on error code
+      if (error.code === 'PGRST301') {
+        toast.error("Permission denied. You might not have proper access rights.");
+      } else {
+        toast.error("Failed to load stock left data: " + error.message);
+      }
+      
       throw error;
     }
     
@@ -174,7 +204,7 @@ export const fetchStockLeftEntries = async () => {
     }));
   } catch (err) {
     console.error("Error in fetchStockLeftEntries:", err);
-    toast.error("Failed to load stock left data");
+    toast.error("Failed to load stock left data. Please try again later.");
     return [];
   }
 };
@@ -198,7 +228,16 @@ export const addStockLeftEntry = async (stockLeftItem: StockLeftItem) => {
     
     if (error) {
       console.error('Error adding stock left entry:', error);
-      toast.error("Failed to add stock left entry");
+      
+      // Show different error message based on error code
+      if (error.code === 'PGRST301') {
+        toast.error("Permission denied. You don't have rights to add stock left entries.");
+      } else if (error.code === '23505') {
+        toast.error("This stock left entry already exists.");
+      } else {
+        toast.error("Failed to add stock left entry: " + error.message);
+      }
+      
       throw error;
     }
     
@@ -207,7 +246,7 @@ export const addStockLeftEntry = async (stockLeftItem: StockLeftItem) => {
     return data;
   } catch (err) {
     console.error("Error in addStockLeftEntry:", err);
-    toast.error("Failed to add stock left entry");
+    toast.error("Failed to add stock left entry. Please try again later.");
     throw err;
   }
 };
@@ -223,7 +262,14 @@ export const deleteAllStockPurchases = async () => {
 
     if (error) {
       console.error('Error deleting stock purchases:', error);
-      toast.error("Failed to delete stock purchases");
+      
+      // Show different error message based on error code
+      if (error.code === 'PGRST301') {
+        toast.error("Permission denied. You don't have rights to delete stock purchases.");
+      } else {
+        toast.error("Failed to delete stock purchases: " + error.message);
+      }
+      
       throw error;
     }
 
@@ -231,7 +277,7 @@ export const deleteAllStockPurchases = async () => {
     toast.success("All stock purchases deleted successfully");
   } catch (err) {
     console.error("Error in deleteAllStockPurchases:", err);
-    toast.error("Failed to delete stock purchases");
+    toast.error("Failed to delete stock purchases. Please try again later.");
     throw err;
   }
 };
@@ -247,7 +293,14 @@ export const deleteAllStockLeftEntries = async () => {
 
     if (error) {
       console.error('Error deleting stock left entries:', error);
-      toast.error("Failed to delete stock left entries");
+      
+      // Show different error message based on error code
+      if (error.code === 'PGRST301') {
+        toast.error("Permission denied. You don't have rights to delete stock left entries.");
+      } else {
+        toast.error("Failed to delete stock left entries: " + error.message);
+      }
+      
       throw error;
     }
 
@@ -255,7 +308,7 @@ export const deleteAllStockLeftEntries = async () => {
     toast.success("All stock left entries deleted successfully");
   } catch (err) {
     console.error("Error in deleteAllStockLeftEntries:", err);
-    toast.error("Failed to delete stock left entries");
+    toast.error("Failed to delete stock left entries. Please try again later.");
     throw err;
   }
 };
