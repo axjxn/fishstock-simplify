@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { StockItem } from "@/components/StockTable";
 import { Spinner } from "@/components/ui/spinner";
+import { deleteAllStockPurchases, deleteAllStockLeftEntries } from "@/utils/supabaseHelpers";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -199,25 +200,9 @@ const Admin = () => {
   const handleResetData = async () => {
     setIsResetting(true);
     try {
-      // Delete all records from stock_purchases
-      const { error: purchasesError } = await supabase
-        .from('stock_purchases')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // This ensures we delete all records
-
-      if (purchasesError) {
-        throw purchasesError;
-      }
-
-      // Delete all records from stock_left
-      const { error: stockLeftError } = await supabase
-        .from('stock_left')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // This ensures we delete all records
-
-      if (stockLeftError) {
-        throw stockLeftError;
-      }
+      // Use the helper functions to delete all data
+      await deleteAllStockPurchases();
+      await deleteAllStockLeftEntries();
 
       // Clear local state
       setStockPurchases([]);

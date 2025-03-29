@@ -32,6 +32,10 @@ export const fetchStockPurchases = async (): Promise<StockItem[]> => {
   
   if (error) {
     console.error('Error fetching stock purchases:', error);
+    throw error;
+  }
+  
+  if (!data || data.length === 0) {
     return [];
   }
   
@@ -59,6 +63,10 @@ export const fetchStockPurchasesByDateAndTime = async (date: string, time: Entry
   
   if (error) {
     console.error('Error fetching stock purchases:', error);
+    throw error;
+  }
+  
+  if (!data || data.length === 0) {
     return [];
   }
   
@@ -109,6 +117,10 @@ export const fetchStockLeftEntries = async () => {
   
   if (error) {
     console.error('Error fetching stock left entries:', error);
+    throw error;
+  }
+  
+  if (!data || data.length === 0) {
     return [];
   }
   
@@ -144,4 +156,30 @@ export const addStockLeftEntry = async (stockLeftItem: StockLeftItem) => {
   }
   
   return data;
+};
+
+// Function to delete all stock purchases
+export const deleteAllStockPurchases = async () => {
+  const { error } = await supabase
+    .from('stock_purchases')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000'); // This ensures we delete all records
+
+  if (error) {
+    console.error('Error deleting stock purchases:', error);
+    throw error;
+  }
+};
+
+// Function to delete all stock left entries
+export const deleteAllStockLeftEntries = async () => {
+  const { error } = await supabase
+    .from('stock_left')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000'); // This ensures we delete all records
+
+  if (error) {
+    console.error('Error deleting stock left entries:', error);
+    throw error;
+  }
 };

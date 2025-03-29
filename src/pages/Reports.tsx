@@ -1,18 +1,58 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { stockMovementReports, stockPurchases } from "@/data/mockData";
-import { formatCurrency, formatWeight } from "@/utils/stockUtils";
+import { formatCurrency, formatWeight, calculateAgeInDays } from "@/utils/stockUtils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { FileDown, FileText, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import BatchIndicator from "@/components/BatchIndicator";
-import { calculateAgeInDays } from "@/utils/stockUtils";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchStockPurchases, fetchStockLeftEntries } from "@/utils/supabaseHelpers";
+import { Spinner } from "@/components/ui/spinner";
 
 const Reports = () => {
   const { toast } = useToast();
   const [dateFilter, setDateFilter] = useState<string>("");
+
+  // Fetch data from Supabase
+  const { 
+    data: stockPurchases = [], 
+    isLoading: isLoadingPurchases 
+  } = useQuery({
+    queryKey: ['stockPurchases'],
+    queryFn: fetchStockPurchases
+  });
+
+  const { 
+    data: stockLeftEntries = [], 
+    isLoading: isLoadingStockLeft 
+  } = useQuery({
+    queryKey: ['stockLeftEntries'],
+    queryFn: fetchStockLeftEntries
+  });
+
+  // Transform stock purchases and stock left data into stock movement reports
+  const stockMovementReports = stockLeftEntries.map(leftEntry => {
+    // Find all purchases for this date and item
+    const purchasesForItem = stockPurchases.filter(
+      purchase => purchase.date === leftEntry.date && purchase.itemName === leftEntry.itemName
+    );
+    
+    // Calculate total purchased weight and cost
+    const stockPurchased = purchasesForItem.reduce((total, item) => total + item.weight, 0);
+    const totalPurchaseCost = purchasesForItem.reduce((total, item) => total + item.totalCost, 0);
+    
+    return {
+      date: leftEntry.date,
+      itemName: leftEntry.itemName,
+      stockPurchased,
+      stockLeft: leftEntry.remainingAmount,
+      estimatedSales: leftEntry.estimatedSales,
+      totalPurchaseCost
+    };
+  });
 
   // Handler for export functionality
   const handleExport = (format: "excel" | "pdf") => {
@@ -37,6 +77,19 @@ const Reports = () => {
   
   // Get unique dates for filter
   const uniqueDates = [...new Set(stockMovementReports.map(report => report.date))];
+  
+  const isLoading = isLoadingPurchases || isLoadingStockLeft;
+  
+  if (isLoading) {
+    return (
+      <div className="page-container flex justify-center items-center min-h-[70vh]">
+        <div className="text-center">
+          <Spinner size="lg" className="mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading report data...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="page-container">
@@ -126,7 +179,7 @@ const Reports = () => {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          No stock movement data available for the selected filter.
+                          {dateFilter ? "No stock movement data available for the selected filter." : "No stock movement data available yet. Complete a night entry to see data here."}
                         </TableCell>
                       </TableRow>
                     )}
@@ -155,26 +208,34 @@ const Reports = () => {
                       <TableHead className="font-medium">Purchase Date</TableHead>
                       <TableHead className="font-medium">Age</TableHead>
                       <TableHead className="font-medium">Status</TableHead>
-                      <TableHead className="font-medium text-right">Remaining Weight</TableHead>
+                      <TableHead className="font-medium text-right">Weight</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {stockPurchases.map((item) => {
-                      const ageInDays = calculateAgeInDays(item.date);
-                      
-                      return (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.itemName}</TableCell>
-                          <TableCell>{item.batchNo}</TableCell>
-                          <TableCell>{item.date}</TableCell>
-                          <TableCell>{ageInDays} {ageInDays === 1 ? 'day' : 'days'}</TableCell>
-                          <TableCell>
-                            <BatchIndicator ageInDays={ageInDays} showLabel />
-                          </TableCell>
-                          <TableCell className="text-right">{formatWeight(item.weight)}</TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {stockPurchases.length > 0 ? (
+                      stockPurchases.map((item) => {
+                        const ageInDays = calculateAgeInDays(item.date);
+                        
+                        return (
+                          <TableRow key={item.id.toString()}>
+                            <TableCell className="font-medium">{item.itemName}</TableCell>
+                            <TableCell>{item.batchNo}</TableCell>
+                            <TableCell>{item.date}</TableCell>
+                            <TableCell>{ageInDays} {ageInDays === 1 ? 'day' : 'days'}</TableCell>
+                            <TableCell>
+                              <BatchIndicator ageInDays={ageInDays} showLabel />
+                            </TableCell>
+                            <TableCell className="text-right">{formatWeight(item.weight)}</TableCell>
+                          </TableRow>
+                        );
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          No stock data available yet. Add stock entries to see aging information.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -209,17 +270,23 @@ const Reports = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={salesData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [`${value} Kg`, 'Sales']} />
-                      <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                {salesData.length > 0 ? (
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={salesData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`${value} Kg`, 'Sales']} />
+                        <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p className="text-muted-foreground">No sales data available yet.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
             
@@ -231,17 +298,23 @@ const Reports = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={salesData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value: number) => [`₹${(value * 1000).toLocaleString()}`, 'Cost']} />
-                      <Line type="monotone" dataKey="cost" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                {salesData.length > 0 ? (
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={salesData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip formatter={(value: number) => [`₹${(value * 1000).toLocaleString()}`, 'Cost']} />
+                        <Line type="monotone" dataKey="cost" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p className="text-muted-foreground">No purchase data available yet.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
