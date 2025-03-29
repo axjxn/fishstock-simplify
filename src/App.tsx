@@ -14,53 +14,67 @@ import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useState } from "react";
 
-// Create the query client with better error and retry configuration
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 30000
+const App = () => {
+  // Create the query client with better error and retry configuration
+  // Using useState to ensure the QueryClient is created only once
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        retry: 2,
+        retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+        staleTime: 30000,
+        onError: (error) => {
+          console.error("Query error:", error);
+        }
+      },
+      mutations: {
+        retry: 1,
+        onError: (error) => {
+          console.error("Mutation error:", error);
+        }
+      }
     }
-  }
-});
+  }));
 
-const App = () => (
-  <BrowserRouter>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            
-            {/* Routes with Navbar */}
-            <Route element={<Navbar />}>
-              {/* Public routes */}
-              <Route path="/" element={<Index />} />
+  return (
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
               
-              {/* Staff only routes */}
-              <Route element={<ProtectedRoute requiredRole="staff" />}>
-                <Route path="/stock-entry" element={<StockEntry />} />
-                <Route path="/stock-left" element={<StockLeft />} />
-                <Route path="/reports" element={<Reports />} />
+              {/* Routes with Navbar */}
+              <Route element={<Navbar />}>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
+                
+                {/* Staff only routes */}
+                <Route element={<ProtectedRoute requiredRole="staff" />}>
+                  <Route path="/stock-entry" element={<StockEntry />} />
+                  <Route path="/stock-left" element={<StockLeft />} />
+                  <Route path="/reports" element={<Reports />} />
+                </Route>
+                
+                {/* Admin only routes */}
+                <Route element={<ProtectedRoute requiredRole="admin" />}>
+                  <Route path="/admin" element={<Admin />} />
+                </Route>
               </Route>
               
-              {/* Admin only routes */}
-              <Route element={<ProtectedRoute requiredRole="admin" />}>
-                <Route path="/admin" element={<Admin />} />
-              </Route>
-            </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
             
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          
-          <Toaster />
-          <Sonner />
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </BrowserRouter>
-);
+            <Toaster />
+            <Sonner position="top-right" closeButton />
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  );
+};
 
 export default App;
